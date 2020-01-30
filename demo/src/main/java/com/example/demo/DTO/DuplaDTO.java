@@ -2,6 +2,8 @@ package com.example.demo.DTO;
 
 import lombok.Data;
 
+import java.util.List;
+
 @Data
 public class DuplaDTO {
 
@@ -22,5 +24,17 @@ public class DuplaDTO {
 
     public void setMembro2(String membro2) {
         this.membro2 = membro2;
+    }
+
+    public static DuplaDTO from(String dupla, List<String> membros) {
+
+        String membro1 =  membros.stream().filter(membro -> membro.split("\\|")[0].equals(dupla.split("\\|")[0])).findFirst().get();
+        String membro2 =  membros.stream().filter(membro -> membro.split("\\|")[0].equals(dupla.split("\\|")[1])).findFirst().get();
+
+        DuplaDTO duplaDTO = new DuplaDTO();
+        duplaDTO.setMembro1(membro1.split("\\|")[1]);
+        duplaDTO.setMembro2(membro2.split("\\|")[1]);
+
+        return duplaDTO;
     }
 }

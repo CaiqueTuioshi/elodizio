@@ -24,6 +24,11 @@ public class RodizioResource {
         return ResponseEntity.ok(this.rodizioService.buscarMembrosDTO());
     }
 
+    @GetMapping("/buscar-duplas")
+    public ResponseEntity<List<DuplaDTO>> buscarDuplas() throws IOException {
+        return ResponseEntity.ok(this.rodizioService.buscarDuplas());
+    }
+
     @PostMapping("/iniciar-duplas")
     public ResponseEntity<List<String>> iniciarDuplas(@RequestBody DuplaDTO dupla) throws IOException {
         return ResponseEntity.ok(this.rodizioService.iniciarDuplas(dupla));

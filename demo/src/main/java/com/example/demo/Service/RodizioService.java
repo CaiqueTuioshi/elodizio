@@ -2,6 +2,7 @@ package com.example.demo.Service;
 
 import com.example.demo.DTO.DuplaDTO;
 import com.example.demo.DTO.MembroDTO;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
@@ -14,6 +15,8 @@ public class RodizioService {
 
     private final String MEMBROS = System.getProperty("user.dir").concat("/src/main/java/com/example/demo/File/membros.txt");
     private final String LOG_DUPLAS = System.getProperty("user.dir").concat("/src/main/java/com/example/demo/File/log_duplas.txt");
+    private final String PIPE = "\\|";
+    private final String MEMBRO_LOCKADO = "*";
 
     private List<String> lerArquivoDeMembros() throws IOException {
         BufferedReader bufferedReader = new BufferedReader(new FileReader(MEMBROS));
@@ -33,18 +36,24 @@ public class RodizioService {
         return this.lerArquivoDeMembros().stream().map(MembroDTO::from).collect(Collectors.toList());
     }
 
+    public List<DuplaDTO> buscarDuplas() throws IOException {
+        List<String> membros = this.lerArquivoDeMembros();
+        
+        return this.lerArquivoDeDuplas().stream().map(dupla -> DuplaDTO.from(dupla, membros)).collect(Collectors.toList());
+    }
+
     public List<String> iniciarDuplas(DuplaDTO dupla) throws IOException {
         BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(LOG_DUPLAS, true));
 
         String lineSeparator = this.lerArquivoDeDuplas().size() == 0 ? "" : System.lineSeparator();
 
         String membro1 = this.lerArquivoDeMembros().stream()
-                .filter(membro -> membro.split("\\|")[1].equals(dupla.getMembro1())).findFirst().get()
-                .split("\\|")[0];
+                .filter(membro -> membro.split(PIPE)[1].equals(dupla.getMembro1())).findFirst().get()
+                .split(PIPE)[0];
 
         String membro2 = this.lerArquivoDeMembros().stream()
-                .filter(membro -> membro.split("\\|")[1].equals(dupla.getMembro2())).findFirst().get()
-                .split("\\|")[0];
+                .filter(membro -> membro.split(PIPE)[1].equals(dupla.getMembro2())).findFirst().get()
+                .split(PIPE)[0];
 
         bufferedWriter.append(lineSeparator.concat(membro1).concat("|").concat(membro2));
         bufferedWriter.close();
@@ -66,10 +75,10 @@ public class RodizioService {
         return contentFile;
     }
 
-    private String sortearMembro(List<String> membros) {
+    private String sortearMembro() throws IOException {
         int membro = 0;
         while (membro == 0) {
-            membro = ((int) (membros.size() * Math.random()));
+            membro = ((int) (this.lerArquivoDeMembros().size() * Math.random()));
         }
 
         return String.valueOf(membro);
@@ -80,43 +89,104 @@ public class RodizioService {
         printWriter.close();
     }
 
-    private void validarDuplas(List<String> membros, List<String> novasDuplas) throws IOException {
+    private String sortearMembroFixo(List<String> membrosLockados) throws IOException {
+        List<String> idMembrosLockados = membrosLockados.stream().map(membro -> membro.split(PIPE)[0]).collect(Collectors.toList());
+
+        String sorteado = "";
+        while(!idMembrosLockados.contains(sorteado)){
+            sorteado = this.sortearMembro();
+        }
+
+        return sorteado;
+    }
+
+    private String sortearMembroRotativo(List<String> membrosRotativos) throws IOException {
+        List<String> idMembrosRotativos = membrosRotativos.stream().map(membro -> membro.split(PIPE)[0]).collect(Collectors.toList());
+
+        String sorteado = "";
+        while(!idMembrosRotativos.contains(sorteado)){
+            sorteado = this.sortearMembro();
+        }
+
+        return sorteado;
+    }
+
+    private String getIdMembroLockadoAndRemove(List<String> membrosLockados) throws IOException {
+        if (membrosLockados.size() > 0) {
+            String idMembroLockadoSorteado = this.sortearMembroFixo(membrosLockados);
+
+            return idMembroLockadoSorteado;
+        }
+
+        return "";
+    }
+
+    private String getIdMembroRotativoAndRemove(List<String> membrosRotativos) throws IOException {
+        if (membrosRotativos.size() > 0) {
+            String idMembroRotativoSorteado = this.sortearMembroRotativo(membrosRotativos);
+
+            return idMembroRotativoSorteado;
+        }
+
+        return "";
+    }
+
+    private void validarDuplas(List<String> membrosLockados, List<String> membrosRotativos, List<String> novasDuplas) throws IOException {
         List<String> duplas = this.lerArquivoDeDuplas();
 
-        while (!membros.isEmpty()) {
-            String membro1 = this.sortearMembro(membros);
-            String membro2 = this.sortearMembro(membros);
+        while (membrosLockados.size() + membrosRotativos.size() > 1) {
+            String idMembroLockadoSorteado = this.getIdMembroLockadoAndRemove(membrosLockados);
+            String idMembroRotativoSorteado = this.getIdMembroRotativoAndRemove(membrosRotativos);
 
+            if (StringUtils.isEmpty(idMembroLockadoSorteado)) {
+                if (membrosRotativos.size() > 1) {
+                    idMembroLockadoSorteado = this.getIdMembroRotativoAndRemove(membrosRotativos);
+                }
+            }
+
+            String finalIdMembroLockadoSorteado = idMembroLockadoSorteado;
             boolean duplaJaMontada = duplas.stream().anyMatch(dupla ->
-                    dupla.contains(membro1) && dupla.contains(membro2)
+                    dupla.contains(finalIdMembroLockadoSorteado) && dupla.contains(idMembroRotativoSorteado)
             );
 
-            if (duplaJaMontada && membros.size() == 2) {
+            if (duplaJaMontada && membrosLockados.size() + membrosRotativos.size() == 2) {
                 this.construirDuplas();
             }
 
             if (duplaJaMontada) {
-                this.validarDuplas(membros, novasDuplas);
+                this.validarDuplas(membrosLockados, membrosRotativos, novasDuplas);
             }
 
-            String lineSeparator = novasDuplas.size() == 0 ? "" : System.lineSeparator();
+            novasDuplas.add(finalIdMembroLockadoSorteado.concat("|").concat(idMembroRotativoSorteado));
+            membrosLockados.removeIf(membro -> membro.split("\\|")[0].equals(finalIdMembroLockadoSorteado));
+            membrosRotativos.removeIf(membro -> membro.split("\\|")[0].equals(idMembroRotativoSorteado));
+        }
 
-            novasDuplas.add(membro1.concat("|").concat(membro2));
-            membros.removeIf(membro -> membro.split("\\|")[0].equals(membro1));
-            membros.removeIf(membro -> membro.split("\\|")[0].equals(membro2));
+        if (!membrosLockados.isEmpty()){
+
+            novasDuplas.add(membrosLockados.get(0).split("\\|")[0].concat("|"));
+        }
+
+        if (!membrosRotativos.isEmpty()){
+            novasDuplas.add(membrosRotativos.get(0).split("\\|")[0].concat("|"));
         }
 
         this.resetarArquivo(LOG_DUPLAS);
 
-        BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(LOG_DUPLAS, true));
-        bufferedWriter.append(String.join(System.lineSeparator(), novasDuplas));
+//        BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(LOG_DUPLAS, true));
+//        bufferedWriter.append(String.join(System.lineSeparator(), novasDuplas));
     }
 
     public List<String> construirDuplas() throws IOException {
-        List<String> membros = this.lerArquivoDeMembros();
+        List<String> membrosLockados = this.lerArquivoDeMembros().stream()
+                .filter(membro -> membro.split("\\|").length > 2 && membro.split("\\|")[2].equals(MEMBRO_LOCKADO)).collect(Collectors.toList());
+
+        List<String> membrosRotativos = this.lerArquivoDeMembros().stream()
+                .filter(membro -> !membrosLockados.contains(membro)).collect(Collectors.toList());
+
         List<String> novasDuplas = new ArrayList<>();
 
-        this.validarDuplas(membros, novasDuplas);
+        this.validarDuplas(membrosLockados, membrosRotativos, novasDuplas);
 
         return this.lerArquivoDeDuplas();
     }
