@@ -2,7 +2,6 @@ package com.example.demo.Service;
 
 import com.example.demo.DTO.DuplaDTO;
 import com.example.demo.DTO.MembroDTO;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
@@ -38,7 +37,7 @@ public class RodizioService {
 
     public List<DuplaDTO> buscarDuplas() throws IOException {
         List<String> membros = this.lerArquivoDeMembros();
-        
+
         return this.lerArquivoDeDuplas().stream().map(dupla -> DuplaDTO.from(dupla, membros)).collect(Collectors.toList());
     }
 
@@ -78,7 +77,7 @@ public class RodizioService {
     private String sortearMembro() throws IOException {
         int membro = 0;
         while (membro == 0) {
-            membro = ((int) (this.lerArquivoDeMembros().size() * Math.random()));
+            membro = (int) (this.lerArquivoDeMembros().size() * Math.random()) + 1;
         }
 
         return String.valueOf(membro);
@@ -93,7 +92,7 @@ public class RodizioService {
         List<String> idMembrosLockados = membrosLockados.stream().map(membro -> membro.split(PIPE)[0]).collect(Collectors.toList());
 
         String sorteado = "";
-        while(!idMembrosLockados.contains(sorteado)){
+        while (!idMembrosLockados.contains(sorteado)) {
             sorteado = this.sortearMembro();
         }
 
@@ -104,7 +103,7 @@ public class RodizioService {
         List<String> idMembrosRotativos = membrosRotativos.stream().map(membro -> membro.split(PIPE)[0]).collect(Collectors.toList());
 
         String sorteado = "";
-        while(!idMembrosRotativos.contains(sorteado)){
+        while (!idMembrosRotativos.contains(sorteado)) {
             sorteado = this.sortearMembro();
         }
 
@@ -135,18 +134,11 @@ public class RodizioService {
         List<String> duplas = this.lerArquivoDeDuplas();
 
         while (membrosLockados.size() + membrosRotativos.size() > 1) {
-            String idMembroLockadoSorteado = this.getIdMembroLockadoAndRemove(membrosLockados);
-            String idMembroRotativoSorteado = this.getIdMembroRotativoAndRemove(membrosRotativos);
+            String idMembroLockadoSorteado = membrosLockados.isEmpty() ? this.getIdMembroRotativoAndRemove(membrosRotativos) : this.getIdMembroLockadoAndRemove(membrosLockados);
+            String idMembroRotativoSorteado = membrosRotativos.isEmpty() ? this.getIdMembroRotativoAndRemove(membrosLockados) : this.getIdMembroRotativoAndRemove(membrosRotativos);
 
-            if (StringUtils.isEmpty(idMembroLockadoSorteado)) {
-                if (membrosRotativos.size() > 1) {
-                    idMembroLockadoSorteado = this.getIdMembroRotativoAndRemove(membrosRotativos);
-                }
-            }
-
-            String finalIdMembroLockadoSorteado = idMembroLockadoSorteado;
             boolean duplaJaMontada = duplas.stream().anyMatch(dupla ->
-                    dupla.contains(finalIdMembroLockadoSorteado) && dupla.contains(idMembroRotativoSorteado)
+                    dupla.contains(idMembroLockadoSorteado) && dupla.contains(idMembroRotativoSorteado)
             );
 
             if (duplaJaMontada && membrosLockados.size() + membrosRotativos.size() == 2) {
@@ -157,24 +149,39 @@ public class RodizioService {
                 this.validarDuplas(membrosLockados, membrosRotativos, novasDuplas);
             }
 
-            novasDuplas.add(finalIdMembroLockadoSorteado.concat("|").concat(idMembroRotativoSorteado));
-            membrosLockados.removeIf(membro -> membro.split("\\|")[0].equals(finalIdMembroLockadoSorteado));
-            membrosRotativos.removeIf(membro -> membro.split("\\|")[0].equals(idMembroRotativoSorteado));
+            novasDuplas.add(idMembroLockadoSorteado.concat("|").concat(idMembroRotativoSorteado));
+
+            if (membrosLockados.isEmpty()) {
+                membrosRotativos.removeIf(membro -> membro.split("\\|")[0].equals(idMembroLockadoSorteado));
+            } else {
+
+                membrosLockados.removeIf(membro -> membro.split("\\|")[0].equals(idMembroLockadoSorteado));
+            }
+
+            if (membrosRotativos.isEmpty()) {
+                membrosLockados.removeIf(membro -> membro.split("\\|")[0].equals(idMembroRotativoSorteado));
+            } else {
+
+                membrosRotativos.removeIf(membro -> membro.split("\\|")[0].equals(idMembroRotativoSorteado));
+            }
         }
 
-        if (!membrosLockados.isEmpty()){
-
+        if (!membrosLockados.isEmpty()) {
             novasDuplas.add(membrosLockados.get(0).split("\\|")[0].concat("|"));
+            membrosLockados.clear();
         }
 
-        if (!membrosRotativos.isEmpty()){
+        if (!membrosRotativos.isEmpty()) {
             novasDuplas.add(membrosRotativos.get(0).split("\\|")[0].concat("|"));
+            membrosRotativos.clear();
         }
 
         this.resetarArquivo(LOG_DUPLAS);
 
-//        BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(LOG_DUPLAS, true));
-//        bufferedWriter.append(String.join(System.lineSeparator(), novasDuplas));
+        BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(LOG_DUPLAS, true));
+        bufferedWriter.append(String.join(System.lineSeparator(), novasDuplas));
+        bufferedWriter.close();
+        bufferedWriter.write();
     }
 
     public List<String> construirDuplas() throws IOException {
