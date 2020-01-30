@@ -181,7 +181,6 @@ public class RodizioService {
         BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(LOG_DUPLAS, true));
         bufferedWriter.append(String.join(System.lineSeparator(), novasDuplas));
         bufferedWriter.close();
-        bufferedWriter.write();
     }
 
     public List<String> construirDuplas() throws IOException {
