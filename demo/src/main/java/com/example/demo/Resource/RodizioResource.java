@@ -15,8 +15,8 @@ public class RodizioResource {
 
     private final RodizioService rodizioService;
 
-    public RodizioResource(RodizioService testeService) {
-        this.rodizioService = testeService;
+    public RodizioResource(RodizioService rodizioService) {
+        this.rodizioService = rodizioService;
     }
 
     @GetMapping("/buscar-membros")
