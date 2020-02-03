@@ -1,18 +1,17 @@
 package com.example.demo.Service;
 
 import com.example.demo.DTO.MembroDTO;
+import com.example.demo.RodizioUtils;
 import org.springframework.stereotype.Service;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
 public class MembroService {
-    
+
     private final String MEMBROS = System.getProperty("user.dir").concat("/src/main/java/com/example/demo/File/membros.txt");
     private final String PIPE = "\\|";
 
@@ -71,5 +70,93 @@ public class MembroService {
         }
 
         return "";
+    }
+
+    public List<String> salvar(String novoMembro) throws IOException {
+        BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(MEMBROS, true));
+
+        int maxIdMembro = this.lerArquivoDeMembros().stream()
+                .mapToInt(membro -> Integer.valueOf(membro.split("\\|")[0]))
+                .max()
+                .orElse(0);
+
+        String lineSeparator = maxIdMembro == 0 ? "" : System.lineSeparator();
+
+        bufferedWriter.append(
+                lineSeparator
+                        .concat(Integer.toString(maxIdMembro + 1))
+                        .concat("|")
+                        .concat(novoMembro));
+        bufferedWriter.close();
+
+        return this.lerArquivoDeMembros();
+    }
+
+    public List<String> removerMembro(String idMembro) throws IOException {
+        List<String> membros = this.lerArquivoDeMembros();
+        membros.removeIf(membro -> idMembro.equals(membro.split("\\|")[0]));
+
+        RodizioUtils.resetarArquivo(MEMBROS);
+
+        membros.forEach(membro -> {
+            try {
+                this.salvar(membro.split("\\|")[1]);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
+
+        return this.lerArquivoDeMembros();
+    }
+
+    public List<String> lockarDeslockarMembro(String id) throws IOException {
+        List<String> membros = this.lerArquivoDeMembros();
+
+        String membroEncontrado = membros.stream().filter(membro -> membro.split(PIPE)[0].equals(id)).findFirst().get();
+
+        String finalMembroEncontrado1 = membroEncontrado;
+        membros.removeIf(membro -> finalMembroEncontrado1.split(PIPE)[0].equals(membro.split("\\|")[0]));
+
+        if (membroEncontrado.split(PIPE).length > 2) {
+            membroEncontrado = membroEncontrado.split(PIPE)[0].concat("|").concat(membroEncontrado.split(PIPE)[1]);
+
+            membros.add(membroEncontrado);
+        }
+
+        if (membroEncontrado.split(PIPE).length == 2) {
+            membroEncontrado = membroEncontrado.split(PIPE)[0].concat("|").concat(membroEncontrado.split(PIPE)[1]).concat("|").concat("*");
+
+            membros.add(membroEncontrado);
+        }
+
+        RodizioUtils.resetarArquivo(MEMBROS);
+
+        membros.forEach(membro -> {
+            BufferedWriter bufferedWriter = null;
+            try {
+                bufferedWriter = new BufferedWriter(new FileWriter(MEMBROS, true));
+
+                int maxIdMembro = this.lerArquivoDeMembros().stream()
+                        .mapToInt(m -> Integer.valueOf(m.split("\\|")[0]))
+                        .max()
+                        .orElse(0);
+
+                String lineSeparator = maxIdMembro == 0 ? "" : System.lineSeparator();
+
+                bufferedWriter.append(
+                        lineSeparator
+                                .concat(Integer.toString(maxIdMembro + 1))
+                                .concat("|")
+                                .concat(membro.split("\\|")[1])
+                                .concat(membro.split("\\|").length > 2 ? "|*" : ""));
+                bufferedWriter.close();
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+        });
+
+        return this.lerArquivoDeMembros();
     }
 }

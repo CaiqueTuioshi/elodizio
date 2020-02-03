@@ -1,9 +1,9 @@
-1|Antônio
-2|Akina
-3|Caíque
-4|Elton
-5|Jun
-6|Luiz
-7|Passoca|*
+1|Jun
+2|Luiz
+3|Passoca|*
+4|Viviane|*
+5|Caíque|*
+6|Antônio|*
+7|Elton|*
 8|Serjão
-9|Viviane|*
+9|Akina|*

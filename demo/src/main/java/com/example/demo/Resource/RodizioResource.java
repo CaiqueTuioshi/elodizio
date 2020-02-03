@@ -34,6 +34,11 @@ public class RodizioResource {
         return ResponseEntity.ok(this.rodizioService.iniciarDuplas(dupla));
     }
 
+    @PostMapping("/lockar-deslockar/{id}")
+    public ResponseEntity<List<String>> lockarDeslockarMembro(@PathVariable String id) throws IOException {
+        return ResponseEntity.ok(this.rodizioService.lockarDeslockarMembro(id));
+    }
+
     @GetMapping("/duplas")
     public ResponseEntity<List<String>> construirDuplas() throws IOException {
         return ResponseEntity.ok(this.rodizioService.construirDuplas());
@@ -44,8 +49,8 @@ public class RodizioResource {
         return ResponseEntity.ok(this.rodizioService.salvar(membro));
     }
 
-    @DeleteMapping("/remover/{idMembro}")
-    public ResponseEntity<List<String>> remover(@PathVariable int idMembro) throws IOException {
-        return ResponseEntity.ok(this.rodizioService.remover(idMembro));
+    @DeleteMapping("/remover/{id}")
+    public ResponseEntity<List<String>> removerMembro(@PathVariable String id) throws IOException {
+        return ResponseEntity.ok(this.rodizioService.removerMembro(id));
     }
 }

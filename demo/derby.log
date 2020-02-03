@@ -1,6 +1,6 @@
 ----------------------------------------------------------------
-Sat Feb 01 15:36:52 BRT 2020:
-Booting Derby version The Apache Software Foundation - Apache Derby - 10.14.2.0 - (1828579): instance a816c00e-0170-020a-921b-0000121d8ff0 
+Mon Feb 03 01:05:54 BRT 2020:
+Booting Derby version The Apache Software Foundation - Apache Derby - 10.14.2.0 - (1828579): instance a816c00e-0170-0939-e68e-0000119597c8 
 on database directory memory:D:\1 - Caíque\98 - Projetos\elodizio\demo\testdb with class loader java.net.URLClassLoader@6ed3ef1 
 Loaded from file:/C:/Users/caiqu/.gradle/caches/modules-2/files-2.1/org.apache.derby/derby/10.14.2.0/7efad40ef52fbb1f08142f07a83b42d29e47d8ce/derby-10.14.2.0.jar
 java.vendor=Oracle Corporation
