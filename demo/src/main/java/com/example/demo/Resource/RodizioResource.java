@@ -25,8 +25,8 @@ public class RodizioResource {
     }
 
     @GetMapping("/buscar-duplas")
-    public ResponseEntity<List<DuplaDTO>> buscarDuplas() throws IOException {
-        return ResponseEntity.ok(this.rodizioService.buscarDuplas());
+    public ResponseEntity<List<DuplaDTO>> buscarDuplasDTO() throws IOException {
+        return ResponseEntity.ok(this.rodizioService.buscarDuplasDTO());
     }
 
     @PostMapping("/iniciar-duplas")
@@ -45,7 +45,7 @@ public class RodizioResource {
     }
 
     @PostMapping("/save")
-    public ResponseEntity<List<String>> salvar(@RequestBody String membro) throws IOException {
+    public ResponseEntity<List<MembroDTO>> salvar(@RequestBody String membro) throws IOException {
         return ResponseEntity.ok(this.rodizioService.salvar(membro));
     }
 

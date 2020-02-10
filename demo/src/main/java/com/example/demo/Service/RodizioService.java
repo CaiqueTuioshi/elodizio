@@ -24,7 +24,7 @@ public class RodizioService {
         return this.membroService.buscarMembrosDTO();
     }
 
-    public List<DuplaDTO> buscarDuplas() throws IOException {
+    public List<DuplaDTO> buscarDuplasDTO() throws IOException {
         return this.duplaService.buscarDuplas();
     }
 
@@ -32,8 +32,9 @@ public class RodizioService {
         return this.duplaService.iniciarDuplas(dupla);
     }
 
-    public List<String> salvar(String novoMembro) throws IOException {
-        return this.membroService.salvar(novoMembro);
+    public List<MembroDTO> salvar(String novoMembro) throws IOException {
+        this.membroService.salvar(novoMembro);
+        return this.membroService.buscarMembrosDTO();
     }
 
     public List<String> removerMembro(String id) throws IOException {
