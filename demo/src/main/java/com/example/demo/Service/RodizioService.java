@@ -28,24 +28,23 @@ public class RodizioService {
         return this.duplaService.buscarDuplas();
     }
 
-    public List<String> iniciarDuplas(DuplaDTO dupla) throws IOException {
+    public List<DuplaDTO> iniciarDuplas(DuplaDTO dupla) throws IOException {
         return this.duplaService.iniciarDuplas(dupla);
     }
 
     public List<MembroDTO> salvar(String novoMembro) throws IOException {
-        this.membroService.salvar(novoMembro);
-        return this.membroService.buscarMembrosDTO();
+        return this.membroService.salvar(novoMembro);
     }
 
-    public List<String> removerMembro(String id) throws IOException {
-        return this.membroService.removerMembro(id);
+    public void removerMembro(String id) throws IOException {
+        this.membroService.removerMembro(id);
     }
 
-    public List<String> construirDuplas() throws IOException {
+    public List<DuplaDTO> construirDuplas() throws IOException {
         return this.duplaService.construirDuplas();
     }
 
-    public List<String> lockarDeslockarMembro(String id) throws IOException {
+    public List<MembroDTO> lockarDeslockarMembro(String id) throws IOException {
         return this.membroService.lockarDeslockarMembro(id);
     }
 }

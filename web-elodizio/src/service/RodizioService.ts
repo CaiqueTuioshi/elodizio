@@ -8,5 +8,17 @@ axios.get('http://localhost:8080/rodizio-api/buscar-membros')
 export const buscarDuplasDTO = (): AxiosPromise<Dupla[]> => 
 axios.get('http://localhost:8080/rodizio-api/buscar-duplas')
 
-export const save = (membro: string): AxiosPromise<Membro[]> => 
+export const iniciarDuplas = (dupla: any): AxiosPromise<Dupla[]> => 
+axios.post('http://localhost:8080/rodizio-api/iniciar-duplas', dupla)
+
+export const save = (membro: any): AxiosPromise<Membro[]> => 
 axios.post('http://localhost:8080/rodizio-api/save', membro)
+
+export const lockarDeslockarMembro = (idMembro: string): AxiosPromise<Membro[]> => 
+axios.post(`http://localhost:8080/rodizio-api/lockar-deslockar/${idMembro}`)
+
+export const construirDuplas = (): AxiosPromise<Dupla[]> => 
+axios.get('http://localhost:8080/rodizio-api/duplas')
+
+export const removerMembro = (id: string): AxiosPromise<void> => 
+axios.delete(`http://localhost:8080/rodizio-api/remover/${id}`)

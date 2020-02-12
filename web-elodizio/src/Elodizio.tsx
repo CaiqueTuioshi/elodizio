@@ -1,104 +1,109 @@
 import React, { Component, useEffect, useState } from 'react';
 // import elotech from './img/elotech';
 import './App.css';
-import { buscarMembrosDTO, buscarDuplasDTO, save } from './service/RodizioService';
+import { buscarMembrosDTO, buscarDuplasDTO, save, iniciarDuplas, removerMembro, lockarDeslockarMembro, construirDuplas } from './service/RodizioService';
 import { Membro } from './type/Membro';
-import {Row, Col, Container, Form} from 'reactstrap'
-import Switch from 'react-switch'
+import {Row, Col, Container, FormGroup} from 'reactstrap'
+
 import { Dupla } from './type/Dupla';
-import {Formik, Field, FormikValues} from 'formik'
+import {Formik, Form, Field, FormikValues, FormikProps} from 'formik'
+import MembroForm from './components/forms/MembroForm';
+import DuplaForm from './components/forms/DuplaForm';
+import MembrosList from './components/lists/MembrosList';
+import DuplasList from './components/lists/DuplasList';
+import { Button } from '@material-ui/core';
 
 type Props = {}
 
+
+
 const Elodizio: React.FC<Props> = (props) => {
   const [membros, setMembros] = useState<Membro[]>();
-  const [duplas, setDuplas] = useState<Dupla[]>();
+  const [duplasOld, setDuplasOld] = useState<Dupla[]>();
+  const [duplasNew, setDuplasNew] = useState<Dupla[]>();
 
 useEffect(() => {
   buscarMembrosDTO()
   .then(response => setMembros(response.data))
   .catch(error => console.log('error', error))
+}, [duplasNew])
 
+useEffect(() => {
   buscarDuplasDTO()
-  .then(response => setDuplas(response.data))
+  .then(response => setDuplasOld(response.data))
   .catch(error => console.log('error', error))
 }, [])
 
-const onSubmit = (membro: FormikValues) => {
-  console.log(membro);
-  
-  // save(membro)
-  // .then(response => setMembros(response.data))
-  // .catch(error => console.log('error', error))
+const onMembroSubmit = (value: FormikValues) => {
+  save(value)
+  .then(response => setMembros(response.data))
+  .catch(error => console.log('error', error))
+}
+
+const onDuplaSubmit = (value: FormikValues) => {
+  iniciarDuplas(value)
+  .then(response => setDuplasOld(response.data))
+  .catch(error => console.log('error', error))
+}
+
+const onLockarDeslockar = (idMembro: string) => {
+  lockarDeslockarMembro(idMembro)
+  .then(response => setMembros(response.data))
+  .catch(error => console.log('error', error))
+}
+
+const onConstruirDuplas = () => {
+  construirDuplas()
+  .then(response => setDuplasNew(response.data))
+  .catch(error => console.log('error', error))
+}
+
+const onRemoveMembro = (id: string, index: number) => {
+  removerMembro(id)
+  .then(() => {
+    const updateMembros = [
+      ...membros ? membros.slice(0, index) : [],
+      ...membros ? membros.slice(index + 1) : []
+    ]
+
+    setMembros(updateMembros);
+  })
+  .catch(error => console.log('error', error))
 }
 
   return (
     <Container>
-      <Formik 
-        initialValues={{ membro: ''}} 
-        onSubmit={onSubmit}
-        render={formProps => (
-          <Form>
-            <Field
-              name="firstName"
-              render={({ field, form, meta }) => (
-                <div>
-                  <input type="text" {...field} placeholder="First Name" />
-                  {meta.touched && meta.error && meta.error}
-                  <button onClick={formProps.submitForm}>Adicionar</button>
-                </div>
-              )}
-            />
-          </Form>
-        )}
-      >
-
-      </Formik>
-    <Row>
-      <Col md={6}>
-      {membros && membros?.length > 0 && (
-        <>
-        <h2>Membros</h2>
-        <ul>
-          <Col md={6}>
-          {membros.map((membro, index) => {
-            return (
-            <Row>
-              <li key={membro.id}>{membro.nome}</li>
-                <span></span>
-                <Switch onChange={() => {}} checked={!membro.lockado}/>
-              <button onClick={() => {}}>X</button>
-            </Row>
-            )
-          })}
-          </Col>
-        </ul>
-        </>
-      )}
-      </Col>
-
-      <Col md={6}>
-      {duplas && duplas?.length > 0 && (
-        <>
-        <h2>Duplas</h2>
-        <ul>
-          <Col md={6}>
-          {duplas.map((dupla, index) => {
-            return (
-            <Row>
-              <Col sm={2}>
-              <li key={index}>{`${dupla.membro1} | ${dupla.membro2}`}</li>
-              </Col>
-            </Row>
-            )
-          })}
-          </Col>
-        </ul>
-        </>
-      )}
-      </Col>
+      <Row>
+        <FormGroup>
+          <h3>Inserir Membro</h3>
+          <MembroForm onMembroSubmit={onMembroSubmit}/>
+        </FormGroup>
+        
       </Row>
-      </Container>
+      <Row>
+      <FormGroup>
+        <h3>Inserir Duplas</h3>
+        <DuplaForm onDuplaSubmit={onDuplaSubmit}/>
+      </FormGroup>
+      </Row>
+
+      <br></br>
+
+      <Row>
+        <Button size='large' variant="contained" color='primary' onClick={() => onConstruirDuplas()}>SORTEAR DUPLAS</Button>
+      </Row>
+        
+      <Row>
+        {membros && (
+          <MembrosList membros={membros} onRemoveMembro={onRemoveMembro} onLockarDeslockar={onLockarDeslockar}/>
+        )}
+
+        {duplasOld && (
+          <DuplasList duplasOld={duplasOld} duplasNew={duplasNew}/>
+        )}
+
+      </Row>
+    </Container>
   );
 }
 

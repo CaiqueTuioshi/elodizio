@@ -29,7 +29,7 @@ public class DuplaService {
         return this.lerArquivoDeDuplas().stream().map(dupla -> DuplaDTO.from(dupla, membros)).collect(Collectors.toList());
     }
 
-    public List<String> iniciarDuplas(DuplaDTO dupla) throws IOException {
+    public List<DuplaDTO> iniciarDuplas(DuplaDTO dupla) throws IOException {
         BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(LOG_DUPLAS, true));
 
         String lineSeparator = this.lerArquivoDeDuplas().size() == 0 ? "" : System.lineSeparator();
@@ -42,7 +42,7 @@ public class DuplaService {
         bufferedWriter.append(lineSeparator.concat(membro1).concat("|").concat(membro2));
         bufferedWriter.close();
 
-        return this.lerArquivoDeDuplas();
+        return buscarDuplas();
     }
 
     private List<String> lerArquivoDeDuplas() throws IOException {
@@ -59,7 +59,7 @@ public class DuplaService {
         return contentFile;
     }
 
-    public List<String> construirDuplas() throws IOException {
+    public List<DuplaDTO> construirDuplas() throws IOException {
         List<String> membrosLockados = this.membroService.lerArquivoDeMembros().stream()
                 .filter(membro -> membro.split("\\|").length > 2 && membro.split("\\|")[2].equals(MEMBRO_LOCKADO)).collect(Collectors.toList());
 
@@ -70,7 +70,7 @@ public class DuplaService {
         List<String> membrosAtualizados = new ArrayList<>();
         this.validarDuplas(membrosLockados, membrosRotativos, novasDuplas, membrosAtualizados);
 
-        return this.lerArquivoDeDuplas();
+        return this.buscarDuplas();
     }
 
     private void validarDuplas(List<String> membrosLockados, List<String> membrosRotativos, List<String> novasDuplas, List<String> membrosAtualizados) throws IOException {

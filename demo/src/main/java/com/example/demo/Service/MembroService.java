@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -30,7 +31,10 @@ public class MembroService {
     }
 
     public List<MembroDTO> buscarMembrosDTO() throws IOException {
-        return this.lerArquivoDeMembros().stream().map(MembroDTO::from).collect(Collectors.toList());
+        return this.lerArquivoDeMembros().stream()
+                .map(MembroDTO::from)
+                .sorted(Comparator.comparing(MembroDTO::getNome))
+                .collect(Collectors.toList());
     }
 
     private String sortearMembro() throws IOException {
@@ -72,7 +76,7 @@ public class MembroService {
         return "";
     }
 
-    public List<String> salvar(String novoMembro) throws IOException {
+    public List<MembroDTO> salvar(String novoMembro) throws IOException {
         BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(MEMBROS, true));
 
         int maxIdMembro = this.lerArquivoDeMembros().stream()
@@ -89,10 +93,10 @@ public class MembroService {
                         .concat(novoMembro));
         bufferedWriter.close();
 
-        return this.lerArquivoDeMembros();
+        return this.buscarMembrosDTO();
     }
 
-    public List<String> removerMembro(String idMembro) throws IOException {
+    public void removerMembro(String idMembro) throws IOException {
         List<String> membros = this.lerArquivoDeMembros();
         membros.removeIf(membro -> idMembro.equals(membro.split("\\|")[0]));
 
@@ -105,11 +109,9 @@ public class MembroService {
                 e.printStackTrace();
             }
         });
-
-        return this.lerArquivoDeMembros();
     }
 
-    public List<String> lockarDeslockarMembro(String id) throws IOException {
+    public List<MembroDTO> lockarDeslockarMembro(String id) throws IOException {
         List<String> membros = this.lerArquivoDeMembros();
 
         String membroEncontrado = membros.stream().filter(membro -> membro.split(PIPE)[0].equals(id)).findFirst().get();
@@ -121,9 +123,7 @@ public class MembroService {
             membroEncontrado = membroEncontrado.split(PIPE)[0].concat("|").concat(membroEncontrado.split(PIPE)[1]);
 
             membros.add(membroEncontrado);
-        }
-
-        if (membroEncontrado.split(PIPE).length == 2) {
+        } else if (membroEncontrado.split(PIPE).length == 2) {
             membroEncontrado = membroEncontrado.split(PIPE)[0].concat("|").concat(membroEncontrado.split(PIPE)[1]).concat("|").concat("*");
 
             membros.add(membroEncontrado);
@@ -157,6 +157,6 @@ public class MembroService {
 
         });
 
-        return this.lerArquivoDeMembros();
+        return this.buscarMembrosDTO();
     }
 }

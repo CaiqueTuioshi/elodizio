@@ -1,5 +1,5 @@
 export type Membro = {
-    id: number;
+    id: string;
     nome: string;
     lockado: boolean;
 }

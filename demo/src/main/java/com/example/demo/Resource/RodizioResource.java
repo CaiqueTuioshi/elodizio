@@ -30,17 +30,17 @@ public class RodizioResource {
     }
 
     @PostMapping("/iniciar-duplas")
-    public ResponseEntity<List<String>> iniciarDuplas(@RequestBody DuplaDTO dupla) throws IOException {
+    public ResponseEntity<List<DuplaDTO>> iniciarDuplas(@RequestBody DuplaDTO dupla) throws IOException {
         return ResponseEntity.ok(this.rodizioService.iniciarDuplas(dupla));
     }
 
     @PostMapping("/lockar-deslockar/{id}")
-    public ResponseEntity<List<String>> lockarDeslockarMembro(@PathVariable String id) throws IOException {
+    public ResponseEntity<List<MembroDTO>> lockarDeslockarMembro(@PathVariable String id) throws IOException {
         return ResponseEntity.ok(this.rodizioService.lockarDeslockarMembro(id));
     }
 
     @GetMapping("/duplas")
-    public ResponseEntity<List<String>> construirDuplas() throws IOException {
+    public ResponseEntity<List<DuplaDTO>> construirDuplas() throws IOException {
         return ResponseEntity.ok(this.rodizioService.construirDuplas());
     }
 
@@ -50,7 +50,8 @@ public class RodizioResource {
     }
 
     @DeleteMapping("/remover/{id}")
-    public ResponseEntity<List<String>> removerMembro(@PathVariable String id) throws IOException {
-        return ResponseEntity.ok(this.rodizioService.removerMembro(id));
+    public ResponseEntity<Void> removerMembro(@PathVariable String id) throws IOException {
+        this.rodizioService.removerMembro(id);
+        return ResponseEntity.ok().build();
     }
 }
