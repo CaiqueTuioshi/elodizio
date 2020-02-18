@@ -2,6 +2,8 @@ package com.example.demo.Service;
 
 import com.example.demo.DTO.DuplaDTO;
 import com.example.demo.DTO.MembroDTO;
+import com.example.demo.DTO.NovoMembroDTO;
+import com.example.demo.RodizioUtils;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -11,6 +13,7 @@ import java.util.List;
 public class RodizioService {
 
     private final String MEMBROS = System.getProperty("user.dir").concat("/src/main/java/com/example/demo/File/membros.txt");
+    private final String LOG_DUPLAS = System.getProperty("user.dir").concat("/src/main/java/com/example/demo/File/log_duplas.txt");
 
     private final MembroService membroService;
     private final DuplaService duplaService;
@@ -32,8 +35,8 @@ public class RodizioService {
         return this.duplaService.iniciarDuplas(dupla);
     }
 
-    public List<MembroDTO> salvar(String novoMembro) throws IOException {
-        return this.membroService.salvar(novoMembro);
+    public List<MembroDTO> salvar(NovoMembroDTO novoMembro) throws IOException {
+        return this.membroService.salvar(novoMembro.getMembro());
     }
 
     public void removerMembro(String id) throws IOException {
@@ -47,11 +50,19 @@ public class RodizioService {
     public List<MembroDTO> lockarDeslockarMembro(String id) throws IOException {
         return this.membroService.lockarDeslockarMembro(id);
     }
+
+    public void zerarMembros() throws IOException {
+        RodizioUtils.resetarArquivo(MEMBROS);;
+    }
+
+    public void zerarDuplas() throws IOException {
+        RodizioUtils.resetarArquivo(LOG_DUPLAS);;
+    }
 }
 
 
-//1|Antônio
-//2|Akina
+//1|Akina
+//2|Antônio
 //3|Caíque
 //4|Elton
 //5|Jun

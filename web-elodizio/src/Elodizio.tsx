@@ -1,7 +1,7 @@
 import React, { Component, useEffect, useState } from 'react';
 // import elotech from './img/elotech';
 import './App.css';
-import { buscarMembrosDTO, buscarDuplasDTO, save, iniciarDuplas, removerMembro, lockarDeslockarMembro, construirDuplas } from './service/RodizioService';
+import { buscarMembrosDTO, buscarDuplasDTO, save, iniciarDuplas, removerMembro, lockarDeslockarMembro, construirDuplas, zerarMembros, zerarDuplas } from './service/RodizioService';
 import { Membro } from './type/Membro';
 import {Row, Col, Container, FormGroup} from 'reactstrap'
 
@@ -14,8 +14,6 @@ import DuplasList from './components/lists/DuplasList';
 import { Button } from '@material-ui/core';
 
 type Props = {}
-
-
 
 const Elodizio: React.FC<Props> = (props) => {
   const [membros, setMembros] = useState<Membro[]>();
@@ -30,7 +28,7 @@ useEffect(() => {
 
 useEffect(() => {
   buscarDuplasDTO()
-  .then(response => setDuplasOld(response.data))
+  .then(response => setDuplasNew(response.data))
   .catch(error => console.log('error', error))
 }, [])
 
@@ -54,7 +52,19 @@ const onLockarDeslockar = (idMembro: string) => {
 
 const onConstruirDuplas = () => {
   construirDuplas()
-  .then(response => setDuplasNew(response.data))
+  .then(response => {setDuplasOld(duplasNew); setDuplasNew(response.data)})
+  .catch(error => console.log('error', error))
+}
+
+const onZerarMembros = () => {
+  zerarMembros()
+  .then(() => setMembros([]))
+  .catch(error => console.log('error', error))
+}
+
+const onZerarDuplas = () => {
+  zerarDuplas()
+  .then(() => {setDuplasOld([]); setDuplasNew([])})
   .catch(error => console.log('error', error))
 }
 
@@ -90,6 +100,8 @@ const onRemoveMembro = (id: string, index: number) => {
       <br></br>
 
       <Row>
+        <Button size='large' variant="contained" color='primary' onClick={() => onZerarMembros()}>ZERAR MEMBROS</Button>
+        <Button size='large' variant="contained" color='primary' onClick={() => onZerarDuplas()}>ZERAR DUPLAS</Button>
         <Button size='large' variant="contained" color='primary' onClick={() => onConstruirDuplas()}>SORTEAR DUPLAS</Button>
       </Row>
         
@@ -98,7 +110,7 @@ const onRemoveMembro = (id: string, index: number) => {
           <MembrosList membros={membros} onRemoveMembro={onRemoveMembro} onLockarDeslockar={onLockarDeslockar}/>
         )}
 
-        {duplasOld && (
+        {duplasNew && (
           <DuplasList duplasOld={duplasOld} duplasNew={duplasNew}/>
         )}
 

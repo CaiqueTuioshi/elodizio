@@ -3,8 +3,8 @@ import { Col, Row } from 'reactstrap';
 import { Dupla } from '../../type/Dupla';
 
 type Props = {
-  duplasOld: Dupla[];
-  duplasNew?: Dupla[];
+  duplasOld?: Dupla[];
+  duplasNew: Dupla[];
 }
 
 const DuplasList: React.FC<Props> = (props) => {
@@ -12,7 +12,7 @@ const DuplasList: React.FC<Props> = (props) => {
   
   return (
     <Row>
-      {duplasOld?.length > 0 && (
+      {duplasOld && duplasOld?.length > 0 && (
         <Col md={6}>
           <h2>Duplas Anteriores</h2>
           <ul>
@@ -31,7 +31,7 @@ const DuplasList: React.FC<Props> = (props) => {
         </Col>
       )}
 
-      {duplasNew && duplasNew?.length > 0 && (
+      {duplasNew?.length > 0 && (
         <Col md={6}>
           <h2>Duplas Atuais</h2>
           <ul>

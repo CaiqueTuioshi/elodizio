@@ -22,7 +22,7 @@ const MembroList: React.FC<Props> = (props) => {
           {membros.map((membro, index) => {
             return (
             <Row>
-              <text>{membro.nome}</text>
+              <text>{`${membro.id} - ${membro.nome}`}</text>
               <label className="switch"></label>
               <Switch size='small' onChange={() => onLockarDeslockar(membro.id)} checked={!membro.lockado} color="primary"/>
               <Button size='small' variant="contained" onClick={() => onRemoveMembro(membro.id, index)} color='secondary'>X</Button>

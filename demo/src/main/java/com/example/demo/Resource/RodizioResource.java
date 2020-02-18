@@ -2,6 +2,7 @@ package com.example.demo.Resource;
 
 import com.example.demo.DTO.DuplaDTO;
 import com.example.demo.DTO.MembroDTO;
+import com.example.demo.DTO.NovoMembroDTO;
 import com.example.demo.Service.RodizioService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -45,13 +46,25 @@ public class RodizioResource {
     }
 
     @PostMapping("/save")
-    public ResponseEntity<List<MembroDTO>> salvar(@RequestBody String membro) throws IOException {
+    public ResponseEntity<List<MembroDTO>> salvar(@RequestBody NovoMembroDTO membro) throws IOException {
         return ResponseEntity.ok(this.rodizioService.salvar(membro));
     }
 
-    @DeleteMapping("/remover/{id}")
+    @GetMapping("/remover/{id}")
     public ResponseEntity<Void> removerMembro(@PathVariable String id) throws IOException {
         this.rodizioService.removerMembro(id);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/zerar-membros")
+    public ResponseEntity<Void> zerarMembros() throws IOException {
+        this.rodizioService.zerarMembros();
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/zerar-duplas")
+    public ResponseEntity<Void> zerarDuplas() throws IOException {
+        this.rodizioService.zerarDuplas();
         return ResponseEntity.ok().build();
     }
 }

@@ -36,8 +36,10 @@ public class DuplaService {
 
         List<String> membros = this.membroService.lerArquivoDeMembros();
 
-        String membro1 = membros.stream().filter(membro -> membro.split(PIPE)[1].equals(dupla.getMembro1())).findFirst().get().split(PIPE)[0];
-        String membro2 = membros.stream().filter(membro -> membro.split(PIPE)[1].equals(dupla.getMembro2())).findFirst().get().split(PIPE)[0];
+        String membro1 = membros.stream().filter(membro -> membro.split(PIPE)[0].equals(dupla.getMembro1())).findFirst().get().split(PIPE)[0];
+        String membro2 = StringUtils.isNotEmpty(dupla.getMembro2())
+                ? membros.stream().filter(membro -> membro.split(PIPE)[0].equals(dupla.getMembro2())).findFirst().get().split(PIPE)[0]
+                : "";
 
         bufferedWriter.append(lineSeparator.concat(membro1).concat("|").concat(membro2));
         bufferedWriter.close();
@@ -61,28 +63,37 @@ public class DuplaService {
 
     public List<DuplaDTO> construirDuplas() throws IOException {
         List<String> membrosLockados = this.membroService.lerArquivoDeMembros().stream()
-                .filter(membro -> membro.split("\\|").length > 2 && membro.split("\\|")[2].equals(MEMBRO_LOCKADO)).collect(Collectors.toList());
+                .filter(membro -> membro.split(PIPE).length > 2 && membro.split(PIPE)[2].equals(MEMBRO_LOCKADO)).collect(Collectors.toList());
 
         List<String> membrosRotativos = this.membroService.lerArquivoDeMembros().stream()
                 .filter(membro -> !membrosLockados.contains(membro)).collect(Collectors.toList());
 
         List<String> novasDuplas = new ArrayList<>();
         List<String> membrosAtualizados = new ArrayList<>();
-        this.validarDuplas(membrosLockados, membrosRotativos, novasDuplas, membrosAtualizados);
+         this.validarDuplas(membrosLockados, membrosRotativos, novasDuplas, membrosAtualizados);
 
         return this.buscarDuplas();
     }
 
     private void validarDuplas(List<String> membrosLockados, List<String> membrosRotativos, List<String> novasDuplas, List<String> membrosAtualizados) throws IOException {
         List<String> duplas = this.lerArquivoDeDuplas();
+        List<String> membros = this.membroService.lerArquivoDeMembros();
+
+        List<String> newListMembros = membrosAtualizados.isEmpty() ? membros : membrosAtualizados;
 
         while (membrosLockados.size() + membrosRotativos.size() > 1) {
             String idMembroLockadoSorteado = membrosLockados.isEmpty() ? this.membroService.getIdMembroRotativo(membrosRotativos) : this.membroService.getIdMembroLockado(membrosLockados);
-            String idMembroRotativoSorteado = membrosRotativos.isEmpty() ? "" : this.membroService.getIdMembroRotativo(membrosRotativos);
+            String idMembroRotativoSorteado = "";
 
+            while ((!membrosRotativos.isEmpty() && StringUtils.isEmpty(idMembroRotativoSorteado)) || idMembroLockadoSorteado.equals(idMembroRotativoSorteado)) {
+                idMembroRotativoSorteado = membrosRotativos.isEmpty() ? "" : this.membroService.getIdMembroRotativo(membrosRotativos);
+            }
+
+            String finalIdMembroRotativoSorteado = idMembroRotativoSorteado;
             boolean duplaJaMontada = duplas.stream()
-                    .anyMatch(dupla -> dupla.equals(String.format("%s|%s", idMembroLockadoSorteado, idMembroRotativoSorteado))
-                            || dupla.equals(String.format("%s|%s", idMembroRotativoSorteado, idMembroLockadoSorteado)));
+                    .anyMatch(dupla -> (StringUtils.isNotEmpty(idMembroLockadoSorteado) && StringUtils.isNotEmpty(finalIdMembroRotativoSorteado))
+                            && (dupla.equals(String.format("%s|%s", idMembroLockadoSorteado, finalIdMembroRotativoSorteado))
+                            || dupla.equals(String.format("%s|%s", finalIdMembroRotativoSorteado, idMembroLockadoSorteado))));
 
             if (duplaJaMontada && membrosLockados.size() + membrosRotativos.size() == 2) {
                 this.construirDuplas();
@@ -91,52 +102,101 @@ public class DuplaService {
 
             if (duplaJaMontada) {
                 this.validarDuplas(membrosLockados, membrosRotativos, novasDuplas, membrosAtualizados);
+//                return this.construirDuplas();
                 return;
             }
 
             if (StringUtils.isNotEmpty(idMembroRotativoSorteado)) {
-                String membroRotativo = this.membroService.lerArquivoDeMembros().stream()
-                        .filter(membro -> membro.split(PIPE)[0].equals(idMembroRotativoSorteado)).findFirst().get();
-                membrosAtualizados.add(membroRotativo.concat("|*"));
+                String membroRotativo = newListMembros.stream().filter(membro -> membro.split(PIPE)[0].equals(finalIdMembroRotativoSorteado)).findFirst().get();
+                int indexmembroRotativo = newListMembros.indexOf(membroRotativo);
 
-                String membroLockado = this.membroService.lerArquivoDeMembros().stream()
-                        .filter(m -> m.split(PIPE)[0].equals(idMembroLockadoSorteado)).findFirst().get();
+                if (!membrosAtualizados.isEmpty()) {
+                    membrosAtualizados.clear();
+                }
+                membrosAtualizados.addAll(newListMembros.subList(0, indexmembroRotativo));
+                membrosAtualizados.add(membroRotativo.concat("|*"));
+                membrosAtualizados.addAll(newListMembros.subList(indexmembroRotativo + 1, newListMembros.size()));
+                newListMembros.clear();
+                newListMembros.addAll(membrosAtualizados);
+
+                String membroLockado = newListMembros.stream().filter(m -> m.split(PIPE)[0].equals(idMembroLockadoSorteado)).findFirst().get();
+                int indexMembroLockado = newListMembros.indexOf(membroLockado);
+
+//                newListMembros.clear();
+//                newListMembros.addAll(membrosAtualizados);
+                membrosAtualizados.clear();
+                membrosAtualizados.addAll(newListMembros.subList(0, indexMembroLockado));
                 membrosAtualizados.add(membroLockado.split(PIPE)[0].concat("|").concat(membroLockado.split(PIPE)[1]));
+                membrosAtualizados.addAll(newListMembros.subList(indexMembroLockado + 1, newListMembros.size()));
+                newListMembros.clear();
+                newListMembros.addAll(membrosAtualizados);
 
                 novasDuplas.add(idMembroRotativoSorteado.concat("|").concat(idMembroLockadoSorteado));
             } else {
-                String membroLockado = this.membroService.lerArquivoDeMembros().stream()
+                String membroLockado = newListMembros.stream()
                         .filter(membro -> membro.split(PIPE)[0].equals(idMembroLockadoSorteado)).findFirst().get();
+
+                int indexMembroLockado = newListMembros.indexOf(membroLockado);
+
+//                newListMembros.clear();
+//                newListMembros.addAll(membrosAtualizados);
+                membrosAtualizados.clear();
+                membrosAtualizados.addAll(newListMembros.subList(0, indexMembroLockado));
                 membrosAtualizados.add(membroLockado.split(PIPE)[0].concat("|").concat(membroLockado.split(PIPE)[1]).concat("|*"));
+                membrosAtualizados.addAll(newListMembros.subList(indexMembroLockado + 1, newListMembros.size()));
+                newListMembros.clear();
+                newListMembros.addAll(membrosAtualizados);
 
                 novasDuplas.add(idMembroLockadoSorteado.concat("|").concat(idMembroRotativoSorteado));
             }
 
 
             if (membrosLockados.isEmpty()) {
-                membrosRotativos.removeIf(membro -> membro.split("\\|")[0].equals(idMembroLockadoSorteado));
+                membrosRotativos.removeIf(membro -> membro.split(PIPE)[0].equals(idMembroLockadoSorteado));
             } else {
 
-                membrosLockados.removeIf(membro -> membro.split("\\|")[0].equals(idMembroLockadoSorteado));
+                membrosLockados.removeIf(membro -> membro.split(PIPE)[0].equals(idMembroLockadoSorteado));
             }
 
             if (membrosRotativos.isEmpty()) {
-                membrosLockados.removeIf(membro -> membro.split("\\|")[0].equals(idMembroRotativoSorteado));
+                membrosLockados.removeIf(membro -> membro.split(PIPE)[0].equals(finalIdMembroRotativoSorteado));
             } else {
 
-                membrosRotativos.removeIf(membro -> membro.split("\\|")[0].equals(idMembroRotativoSorteado));
+                membrosRotativos.removeIf(membro -> membro.split(PIPE)[0].equals(finalIdMembroRotativoSorteado));
             }
         }
 
         if (!membrosLockados.isEmpty()) {
-            novasDuplas.add(membrosLockados.get(0).split("\\|")[0].concat("|"));
-            membrosAtualizados.add(membrosLockados.get(0).split("\\|")[0].concat("|").concat(membrosLockados.get(0).split("\\|")[1]).concat("|*"));
+            String membroLockado = newListMembros.stream().filter(membro -> membro.split(PIPE)[0].equals(membrosLockados.get(0).split(PIPE)[0])).findFirst().get();
+            int indexMembroLockado = newListMembros.indexOf(membroLockado);
+
+//            newListMembros.clear();
+//            newListMembros.addAll(membrosAtualizados);
+            membrosAtualizados.clear();
+            membrosAtualizados.addAll(newListMembros.subList(0, indexMembroLockado));
+            membrosAtualizados.add(membrosLockados.get(0).split(PIPE)[0].concat("|").concat(membrosLockados.get(0).split(PIPE)[1]).concat("|*"));
+            membrosAtualizados.addAll(newListMembros.subList(indexMembroLockado + 1, newListMembros.size()));
+            newListMembros.clear();
+            newListMembros.addAll(membrosAtualizados);
+
+            novasDuplas.add(membrosLockados.get(0).split(PIPE)[0].concat("|"));
             membrosLockados.clear();
         }
 
         if (!membrosRotativos.isEmpty()) {
-            novasDuplas.add(membrosRotativos.get(0).split("\\|")[0].concat("|"));
-            membrosAtualizados.add(membrosRotativos.get(0).split("\\|")[0].concat("|").concat(membrosRotativos.get(0).split("\\|")[1]).concat("|*"));
+            String membroRotativos = newListMembros.stream().filter(membro -> membro.split(PIPE)[0].equals(membrosRotativos.get(0).split(PIPE)[0])).findFirst().get();
+            int indexMembroRotativos = newListMembros.indexOf(membroRotativos);
+
+//            newListMembros.clear();
+//            newListMembros.addAll(membrosAtualizados);
+            membrosAtualizados.clear();
+            membrosAtualizados.addAll(newListMembros.subList(0, indexMembroRotativos));
+            membrosAtualizados.add(membrosRotativos.get(0).split(PIPE)[0].concat("|").concat(membrosRotativos.get(0).split(PIPE)[1]).concat("|*"));
+            membrosAtualizados.addAll(newListMembros.subList(indexMembroRotativos + 1, newListMembros.size()));
+            newListMembros.clear();
+            newListMembros.addAll(membrosAtualizados);
+
+            novasDuplas.add(membrosRotativos.get(0).split(PIPE)[0].concat("|"));
             membrosRotativos.clear();
         }
 
@@ -154,7 +214,7 @@ public class DuplaService {
                 bufferedWriter = new BufferedWriter(new FileWriter(MEMBROS, true));
 
                 int maxIdMembro = this.membroService.lerArquivoDeMembros().stream()
-                        .mapToInt(m -> Integer.valueOf(m.split("\\|")[0]))
+                        .mapToInt(m -> Integer.valueOf(m.split(PIPE)[0]))
                         .max()
                         .orElse(0);
 
@@ -162,10 +222,10 @@ public class DuplaService {
 
                 bufferedWriter.append(
                         lineSeparator
-                                .concat(Integer.toString(maxIdMembro + 1))
+                                .concat(membro.split(PIPE)[0])
                                 .concat("|")
-                                .concat(membro.split("\\|")[1])
-                                .concat(membro.split("\\|").length > 2 ? "|*" : ""));
+                                .concat(membro.split(PIPE)[1])
+                                .concat(membro.split(PIPE).length > 2 ? "|*" : ""));
                 bufferedWriter.close();
 
             } catch (IOException e) {
@@ -174,4 +234,5 @@ public class DuplaService {
 
         });
     }
+
 }

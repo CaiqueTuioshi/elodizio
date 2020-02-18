@@ -96,67 +96,68 @@ public class MembroService {
         return this.buscarMembrosDTO();
     }
 
-    public void removerMembro(String idMembro) throws IOException {
+    public void removerMembro(String id) throws IOException {
         List<String> membros = this.lerArquivoDeMembros();
-        membros.removeIf(membro -> idMembro.equals(membro.split("\\|")[0]));
+
+        String membroEncontrado = membros.stream().filter(membro -> membro.split(PIPE)[0].equals(id)).findFirst().get();
+        int indexToLock = membros.indexOf(membroEncontrado);
+
+        List<String> novaListaMembros = new ArrayList<>();
+        novaListaMembros.addAll(membros.subList(0, indexToLock));
+        novaListaMembros.addAll(membros.subList(indexToLock + 1, membros.size()));
 
         RodizioUtils.resetarArquivo(MEMBROS);
 
-        membros.forEach(membro -> {
-            try {
-                this.salvar(membro.split("\\|")[1]);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        });
+        novaListaMembros.forEach(this::atualizarESalvar);
     }
 
     public List<MembroDTO> lockarDeslockarMembro(String id) throws IOException {
         List<String> membros = this.lerArquivoDeMembros();
 
         String membroEncontrado = membros.stream().filter(membro -> membro.split(PIPE)[0].equals(id)).findFirst().get();
-
-        String finalMembroEncontrado1 = membroEncontrado;
-        membros.removeIf(membro -> finalMembroEncontrado1.split(PIPE)[0].equals(membro.split("\\|")[0]));
+        int indexToLock = membros.indexOf(membroEncontrado);
 
         if (membroEncontrado.split(PIPE).length > 2) {
             membroEncontrado = membroEncontrado.split(PIPE)[0].concat("|").concat(membroEncontrado.split(PIPE)[1]);
-
-            membros.add(membroEncontrado);
         } else if (membroEncontrado.split(PIPE).length == 2) {
             membroEncontrado = membroEncontrado.split(PIPE)[0].concat("|").concat(membroEncontrado.split(PIPE)[1]).concat("|").concat("*");
-
-            membros.add(membroEncontrado);
         }
+
+        List<String> novaListaMembros = new ArrayList<>();
+        novaListaMembros.addAll(membros.subList(0, indexToLock));
+        novaListaMembros.add(membroEncontrado);
+        novaListaMembros.addAll(membros.subList(indexToLock + 1, membros.size()));
 
         RodizioUtils.resetarArquivo(MEMBROS);
 
-        membros.forEach(membro -> {
-            BufferedWriter bufferedWriter = null;
-            try {
-                bufferedWriter = new BufferedWriter(new FileWriter(MEMBROS, true));
-
-                int maxIdMembro = this.lerArquivoDeMembros().stream()
-                        .mapToInt(m -> Integer.valueOf(m.split("\\|")[0]))
-                        .max()
-                        .orElse(0);
-
-                String lineSeparator = maxIdMembro == 0 ? "" : System.lineSeparator();
-
-                bufferedWriter.append(
-                        lineSeparator
-                                .concat(Integer.toString(maxIdMembro + 1))
-                                .concat("|")
-                                .concat(membro.split("\\|")[1])
-                                .concat(membro.split("\\|").length > 2 ? "|*" : ""));
-                bufferedWriter.close();
-
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
-        });
+        novaListaMembros.forEach(this::atualizarESalvar);
 
         return this.buscarMembrosDTO();
+    }
+
+    private void atualizarESalvar(String membro) {
+        BufferedWriter bufferedWriter = null;
+        try {
+            bufferedWriter = new BufferedWriter(new FileWriter(MEMBROS, true));
+
+            int maxIdMembro = this.lerArquivoDeMembros().stream()
+                    .mapToInt(m -> Integer.valueOf(m.split("\\|")[0]))
+                    .max()
+                    .orElse(0);
+
+            String lineSeparator = maxIdMembro == 0 ? "" : System.lineSeparator();
+
+            bufferedWriter.append(
+                    lineSeparator
+//                            .concat(Integer.toString(maxIdMembro + 1))
+                            .concat(membro.split("\\|")[0])
+                            .concat("|")
+                            .concat(membro.split("\\|")[1])
+                            .concat(membro.split("\\|").length > 2 ? "|*" : ""));
+            bufferedWriter.close();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
