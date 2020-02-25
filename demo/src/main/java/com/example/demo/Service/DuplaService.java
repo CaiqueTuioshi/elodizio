@@ -47,7 +47,7 @@ public class DuplaService {
         return buscarDuplas();
     }
 
-    private List<String> lerArquivoDeDuplas() throws IOException {
+    public List<String> lerArquivoDeDuplas() throws IOException {
         BufferedReader bufferedReader = new BufferedReader(new FileReader(LOG_DUPLAS));
         List<String> contentFile = new ArrayList<>();
         String s;
@@ -79,7 +79,8 @@ public class DuplaService {
         List<String> duplas = this.lerArquivoDeDuplas();
         List<String> membros = this.membroService.lerArquivoDeMembros();
 
-        List<String> newListMembros = membrosAtualizados.isEmpty() ? membros : membrosAtualizados;
+        List<String> newListMembros = new ArrayList<>();
+        newListMembros.addAll(membrosAtualizados.isEmpty() ? membros : membrosAtualizados);
 
         while (membrosLockados.size() + membrosRotativos.size() > 1) {
             String idMembroLockadoSorteado = membrosLockados.isEmpty() ? this.membroService.getIdMembroRotativo(membrosRotativos) : this.membroService.getIdMembroLockado(membrosLockados);
@@ -102,7 +103,6 @@ public class DuplaService {
 
             if (duplaJaMontada) {
                 this.validarDuplas(membrosLockados, membrosRotativos, novasDuplas, membrosAtualizados);
-//                return this.construirDuplas();
                 return;
             }
 
@@ -122,8 +122,6 @@ public class DuplaService {
                 String membroLockado = newListMembros.stream().filter(m -> m.split(PIPE)[0].equals(idMembroLockadoSorteado)).findFirst().get();
                 int indexMembroLockado = newListMembros.indexOf(membroLockado);
 
-//                newListMembros.clear();
-//                newListMembros.addAll(membrosAtualizados);
                 membrosAtualizados.clear();
                 membrosAtualizados.addAll(newListMembros.subList(0, indexMembroLockado));
                 membrosAtualizados.add(membroLockado.split(PIPE)[0].concat("|").concat(membroLockado.split(PIPE)[1]));
@@ -138,8 +136,6 @@ public class DuplaService {
 
                 int indexMembroLockado = newListMembros.indexOf(membroLockado);
 
-//                newListMembros.clear();
-//                newListMembros.addAll(membrosAtualizados);
                 membrosAtualizados.clear();
                 membrosAtualizados.addAll(newListMembros.subList(0, indexMembroLockado));
                 membrosAtualizados.add(membroLockado.split(PIPE)[0].concat("|").concat(membroLockado.split(PIPE)[1]).concat("|*"));
@@ -170,8 +166,6 @@ public class DuplaService {
             String membroLockado = newListMembros.stream().filter(membro -> membro.split(PIPE)[0].equals(membrosLockados.get(0).split(PIPE)[0])).findFirst().get();
             int indexMembroLockado = newListMembros.indexOf(membroLockado);
 
-//            newListMembros.clear();
-//            newListMembros.addAll(membrosAtualizados);
             membrosAtualizados.clear();
             membrosAtualizados.addAll(newListMembros.subList(0, indexMembroLockado));
             membrosAtualizados.add(membrosLockados.get(0).split(PIPE)[0].concat("|").concat(membrosLockados.get(0).split(PIPE)[1]).concat("|*"));
@@ -187,8 +181,6 @@ public class DuplaService {
             String membroRotativos = newListMembros.stream().filter(membro -> membro.split(PIPE)[0].equals(membrosRotativos.get(0).split(PIPE)[0])).findFirst().get();
             int indexMembroRotativos = newListMembros.indexOf(membroRotativos);
 
-//            newListMembros.clear();
-//            newListMembros.addAll(membrosAtualizados);
             membrosAtualizados.clear();
             membrosAtualizados.addAll(newListMembros.subList(0, indexMembroRotativos));
             membrosAtualizados.add(membrosRotativos.get(0).split(PIPE)[0].concat("|").concat(membrosRotativos.get(0).split(PIPE)[1]).concat("|*"));
@@ -200,39 +192,18 @@ public class DuplaService {
             membrosRotativos.clear();
         }
 
-        RodizioUtils.resetarArquivo(LOG_DUPLAS);
-
-        BufferedWriter bufferedWriterLog = new BufferedWriter(new FileWriter(LOG_DUPLAS, true));
-        bufferedWriterLog.append(String.join(System.lineSeparator(), novasDuplas));
-        bufferedWriterLog.close();
+        this.escreverDuplas(novasDuplas);
 
         RodizioUtils.resetarArquivo(MEMBROS);
 
-        membrosAtualizados.forEach(membro -> {
-            BufferedWriter bufferedWriter = null;
-            try {
-                bufferedWriter = new BufferedWriter(new FileWriter(MEMBROS, true));
-
-                int maxIdMembro = this.membroService.lerArquivoDeMembros().stream()
-                        .mapToInt(m -> Integer.valueOf(m.split(PIPE)[0]))
-                        .max()
-                        .orElse(0);
-
-                String lineSeparator = maxIdMembro == 0 ? "" : System.lineSeparator();
-
-                bufferedWriter.append(
-                        lineSeparator
-                                .concat(membro.split(PIPE)[0])
-                                .concat("|")
-                                .concat(membro.split(PIPE)[1])
-                                .concat(membro.split(PIPE).length > 2 ? "|*" : ""));
-                bufferedWriter.close();
-
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
-        });
+        membrosAtualizados.forEach(this.membroService::atualizarESalvar);
     }
 
+    public void escreverDuplas(List<String> novaListaDuplas) throws IOException {
+        RodizioUtils.resetarArquivo(LOG_DUPLAS);
+
+        BufferedWriter bufferedWriterLog = new BufferedWriter(new FileWriter(LOG_DUPLAS, true));
+        bufferedWriterLog.append(String.join(System.lineSeparator(), novaListaDuplas));
+        bufferedWriterLog.close();
+    }
 }

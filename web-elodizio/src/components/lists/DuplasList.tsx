@@ -19,7 +19,7 @@ const DuplasList: React.FC<Props> = (props) => {
             <Col md={6}>
             {duplasOld.map((duplaOld, index) => {
               return (
-              <Row>
+              <Row key={index}>
                 <Col sm={2}>
                 <li key={index}>{`${duplaOld.membro1} | ${duplaOld.membro2}`}</li>
                 </Col>
@@ -38,7 +38,7 @@ const DuplasList: React.FC<Props> = (props) => {
             <Col md={6}>
             {duplasNew.map((duplaNew, index) => {
               return (
-              <Row>
+              <Row key={index}>
                 <Col sm={2}>
                 <li key={index}>{`${duplaNew.membro1} | ${duplaNew.membro2}`}</li>
                 </Col>

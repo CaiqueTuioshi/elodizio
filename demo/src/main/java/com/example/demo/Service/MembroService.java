@@ -135,7 +135,7 @@ public class MembroService {
         return this.buscarMembrosDTO();
     }
 
-    private void atualizarESalvar(String membro) {
+    public void atualizarESalvar(String membro) {
         BufferedWriter bufferedWriter = null;
         try {
             bufferedWriter = new BufferedWriter(new FileWriter(MEMBROS, true));
@@ -149,7 +149,6 @@ public class MembroService {
 
             bufferedWriter.append(
                     lineSeparator
-//                            .concat(Integer.toString(maxIdMembro + 1))
                             .concat(membro.split("\\|")[0])
                             .concat("|")
                             .concat(membro.split("\\|")[1])

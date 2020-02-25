@@ -7,6 +7,7 @@ import com.example.demo.RodizioUtils;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -41,6 +42,25 @@ public class RodizioService {
 
     public void removerMembro(String id) throws IOException {
         this.membroService.removerMembro(id);
+
+        List<String> duplas = this.duplaService.lerArquivoDeDuplas();
+
+        String duplaEncontrada = duplas.stream()
+                .filter(membro -> membro.contains(id))
+                .findFirst().get();
+        int indexFound = duplas.indexOf(duplaEncontrada);
+
+        String duplaAtualizada =  duplaEncontrada.replace(id, "").replace("|", "");
+
+//        List<String> novaListaDuplas = new ArrayList<>();
+//        novaListaDuplas.addAll(duplas.subList(0, indexFound));
+//        novaListaDuplas.add(duplaAtualizada);
+//        novaListaDuplas.addAll(duplas.subList(indexFound + 1, duplas.size()));
+
+        duplas.remove(indexFound);
+        duplas.add(duplaAtualizada.concat("|"));
+
+        this.duplaService.escreverDuplas(duplas);
     }
 
     public List<DuplaDTO> construirDuplas() throws IOException {

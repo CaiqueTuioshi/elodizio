@@ -17,11 +17,10 @@ const MembroList: React.FC<Props> = (props) => {
       {membros && membros?.length > 0 && (
         <>
         <h2>Membros</h2>
-        {/* <ul> */}
           <Col md={6}>
           {membros.map((membro, index) => {
             return (
-            <Row>
+            <Row key={membro.id}>
               <text>{`${membro.id} - ${membro.nome}`}</text>
               <label className="switch"></label>
               <Switch size='small' onChange={() => onLockarDeslockar(membro.id)} checked={!membro.lockado} color="primary"/>
