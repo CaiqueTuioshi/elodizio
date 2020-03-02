@@ -150,14 +150,12 @@ public class DuplaService {
             if (membrosLockados.isEmpty()) {
                 membrosRotativos.removeIf(membro -> membro.split(PIPE)[0].equals(idMembroLockadoSorteado));
             } else {
-
                 membrosLockados.removeIf(membro -> membro.split(PIPE)[0].equals(idMembroLockadoSorteado));
             }
 
             if (membrosRotativos.isEmpty()) {
                 membrosLockados.removeIf(membro -> membro.split(PIPE)[0].equals(finalIdMembroRotativoSorteado));
             } else {
-
                 membrosRotativos.removeIf(membro -> membro.split(PIPE)[0].equals(finalIdMembroRotativoSorteado));
             }
         }

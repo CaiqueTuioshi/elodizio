@@ -33,17 +33,22 @@ public class MembroService {
     public List<MembroDTO> buscarMembrosDTO() throws IOException {
         return this.lerArquivoDeMembros().stream()
                 .map(MembroDTO::from)
-                .sorted(Comparator.comparing(MembroDTO::getNome))
+                .sorted(Comparator.comparing(membro -> Integer.valueOf(membro.getId())))
                 .collect(Collectors.toList());
     }
 
     private String sortearMembro() throws IOException {
-        int membro = 0;
-        while (membro == 0) {
-            membro = (int) (this.lerArquivoDeMembros().size() * Math.random()) + 1;
+        int membroId = 0;
+
+        int maxId = this.lerArquivoDeMembros().stream()
+                .mapToInt(membro -> Integer.valueOf(membro.split(PIPE)[0]))
+                .max().getAsInt();
+
+        while (membroId == 0) {
+            membroId = (int) (maxId * Math.random()) + 1;
         }
 
-        return String.valueOf(membro);
+        return String.valueOf(membroId);
     }
 
     public String getIdMembroLockado(List<String> membrosLockados) throws IOException {

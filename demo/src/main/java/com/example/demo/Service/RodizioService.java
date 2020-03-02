@@ -40,7 +40,7 @@ public class RodizioService {
         return this.membroService.salvar(novoMembro.getMembro());
     }
 
-    public void removerMembro(String id) throws IOException {
+    public List<DuplaDTO> removerMembro(String id) throws IOException {
         this.membroService.removerMembro(id);
 
         List<String> duplas = this.duplaService.lerArquivoDeDuplas();
@@ -52,15 +52,12 @@ public class RodizioService {
 
         String duplaAtualizada =  duplaEncontrada.replace(id, "").replace("|", "");
 
-//        List<String> novaListaDuplas = new ArrayList<>();
-//        novaListaDuplas.addAll(duplas.subList(0, indexFound));
-//        novaListaDuplas.add(duplaAtualizada);
-//        novaListaDuplas.addAll(duplas.subList(indexFound + 1, duplas.size()));
-
         duplas.remove(indexFound);
         duplas.add(duplaAtualizada.concat("|"));
 
         this.duplaService.escreverDuplas(duplas);
+
+        return this.buscarDuplasDTO();
     }
 
     public List<DuplaDTO> construirDuplas() throws IOException {

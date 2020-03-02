@@ -50,10 +50,9 @@ public class RodizioResource {
         return ResponseEntity.ok(this.rodizioService.salvar(membro));
     }
 
-    @GetMapping("/remover/{id}")
-    public ResponseEntity<Void> removerMembro(@PathVariable String id) throws IOException {
-        this.rodizioService.removerMembro(id);
-        return ResponseEntity.ok().build();
+    @PostMapping("/remover/{id}")
+    public ResponseEntity<List<DuplaDTO>> removerMembro(@PathVariable String id) throws IOException {
+        return ResponseEntity.ok(this.rodizioService.removerMembro(id));
     }
 
     @PostMapping("/zerar-membros")

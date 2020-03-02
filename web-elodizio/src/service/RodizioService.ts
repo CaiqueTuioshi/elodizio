@@ -20,8 +20,8 @@ axios.post(`http://localhost:8080/rodizio-api/lockar-deslockar/${idMembro}`)
 export const construirDuplas = (): AxiosPromise<Dupla[]> => 
 axios.get('http://localhost:8080/rodizio-api/duplas')
 
-export const removerMembro = (id: string): AxiosPromise<void> => 
-axios.get(`http://localhost:8080/rodizio-api/remover/${id}`)
+export const removerMembro = (id: string): AxiosPromise<Dupla[]> => 
+axios.post(`http://localhost:8080/rodizio-api/remover/${id}`)
 
 export const zerarMembros = (): AxiosPromise<void> => 
 axios.post('http://localhost:8080/rodizio-api/zerar-membros')

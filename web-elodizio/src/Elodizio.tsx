@@ -1,4 +1,4 @@
-import React, { Component, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 // import elotech from './img/elotech';
 import './App.css';
 import { buscarMembrosDTO, buscarDuplasDTO, save, iniciarDuplas, removerMembro, lockarDeslockarMembro, construirDuplas, zerarMembros, zerarDuplas } from './service/RodizioService';
@@ -6,7 +6,7 @@ import { Membro } from './type/Membro';
 import {Row, Col, Container, FormGroup} from 'reactstrap'
 
 import { Dupla } from './type/Dupla';
-import {Formik, Form, Field, FormikValues, FormikProps} from 'formik'
+import { FormikValues } from 'formik'
 import MembroForm from './components/forms/MembroForm';
 import DuplaForm from './components/forms/DuplaForm';
 import MembrosList from './components/lists/MembrosList';
@@ -70,13 +70,14 @@ const onZerarDuplas = () => {
 
 const onRemoveMembro = (id: string, index: number) => {
   removerMembro(id)
-  .then(() => {
+  .then(response => {
     const updateMembros = [
       ...membros ? membros.slice(0, index) : [],
       ...membros ? membros.slice(index + 1) : []
     ]
 
     setMembros(updateMembros);
+    setDuplasNew(response.data);
   })
   .catch(error => console.log('error', error))
 }
