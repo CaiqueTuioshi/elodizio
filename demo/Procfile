@@ -1,0 +1,1 @@
+web: java $JAVA_OPTS -jar out/artifacts/demo_main_jar/demo.main.jar

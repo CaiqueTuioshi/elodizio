@@ -69,11 +69,11 @@ public class RodizioService {
     }
 
     public void zerarMembros() throws IOException {
-        RodizioUtils.resetarArquivo(MEMBROS);;
+        RodizioUtils.resetarArquivo(MEMBROS);
     }
 
     public void zerarDuplas() throws IOException {
-        RodizioUtils.resetarArquivo(LOG_DUPLAS);;
+        RodizioUtils.resetarArquivo(LOG_DUPLAS);
     }
 }
 
